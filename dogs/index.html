@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head lang="ja">
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <style>
+   [v-cloak]{
+     display: none;
+   }
+   select{
+     color:#fff;
+     font-weight: bold;
+   }
+ </style>
+  <title>DOG API</title>
+</head>
+<body ontouchstart="">
+  <div id="app" v-cloak>
+    <v-app>
+      <v-app-bar flat dark color="pink lighten-2">
+      <v-col class="text-center" cols="12">
+        <h1 class="Heading 4 text-uppercase">
+          we love dogs
+        </h1>
+       </v-col>
+      </v-app-bar>
+        <v-btn v-scroll="onScroll" v-show="fab" fab dark fixed bottom right color="pink lighten-2" @click="toTop">
+          <v-icon>mdi-chevron-up</v-icon>
+        </v-btn>
+      <v-main>
+        <div v-if="loading">loading.....</div>
+        <div v-if="!loading">
+        <v-container fluid class="my-5">
+          <v-row justify="center" v-show="dialog" class="scroll-y">
+            <v-dialog v-model="dialog" max-width="600px">
+              <v-card>
+                <v-card-title>
+                  <v-col class="text-center" cols="12">
+                  <span dark class="headline text-capitalize">
+                       thank you dog api
+                      <v-icon large color="pink lighten-1">
+                        mdi-cards-heart
+                      </v-icon>
+                  </span>
+                  </v-col>
+                </v-card-title>
+                <v-col class="text-center my-3" cols="12"
+                 v-for="dogImage in dogImages" :key="dogImage">
+
+                    <v-img lazy-src="https://picsum.photos/id/11/10/6"
+                     max-height="1000"
+                     max-width="600" :src="dogImage">
+                    </v-img>
+
+                </v-col>
+                <v-card-actions>
+                  <v-spacer></v-spacer>
+                  <v-btn color="green darken-1" text @click="dialog = false">
+                    閉じる
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </v-row>
+
+          <v-row justify="center">
+             <v-col cols="12" sm="10" md="8" lg="6">
+              <v-alert outlined color="#F06292">
+                <div>写真をクリックすると１犬種あたり１０枚のランダムにチョイスされた写真がでます。<br>
+                  ほとんどの犬種は１００枚以上の写真がありますが、中には２〜３枚(最小は1枚)の犬種がいます</div>
+              </v-alert>
+             </v-col>
+            </v-row>
+             <v-row>
+            <v-col v-for="(dogarray, dogkey, index) in dogTypes" :key="dogkey" cols="6" md="4">
+            <v-hover>
+              <template v-slot:default="{ hover }">
+                <v-card class="mx-auto" max-width="320">
+                  <v-img :src="images[index]"></v-img>
+                  <v-card-text>
+                    <h2 class="title primary--text">
+                      {{dogkey}}
+                    </h2>
+                  </v-card-text>
+                  <v-fade-transition>
+                    <v-overlay v-if="hover" absolute color="#036358">
+                      <v-btn @click.prevent="fetchDogImage(index)">See more</v-btn>
+                          <v-card-subtitle v-if="dogarray.length > 1" style="margin: -34px;">
+                            <select v-model="selected" dark class="Heading 6" style="margin-top: 32px;">
+                              <option disabled value="">より詳細な分類を選択</option>
+                              <option v-for="(dog, index) in dogarray"
+                              :key="'dogkey' +index"
+                              :value="dog">{{dog}}</option>
+                            </select>
+                          </v-card-subtitle>
+                    </v-overlay>
+                  </v-fade-transition>
+                </v-card>
+              </template>
+            </v-hover>
+            </v-col>
+        </v-row>
+        </v-container>
+        </div>
+       </v-main>
+      <v-footer dark color="pink lighten-2">
+        <v-col class="text-center" cols="12">
+          <strong>&copy; hiromi 2020</strong>
+        </v-col>
+      </v-footer>
+      </v-app>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.3.1/es6-promise.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.4/fetch.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js"></script>
+  <script src="index.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      vuetify: new Vuetify(),
+      data(){
+        return{
+         firstDogUrl:'',
+         dogTypes:Object,
+         selected:'',
+         dogUrl:'',
+         dogImages:null,
+         loading: false,
+         dialog: false,
+         images: images,
+         fab: false
+        }
+      },
+      methods:{
+      async fetchDogImage(index){
+        if(this.selected === ""){
+          this.dogUrl = `https://dog.ceo/api/breed/${Object.keys(this.dogTypes)[index]}/images`
+        }
+        if(this.selected !== ""){
+           this.dogUrl = `https://dog.ceo/api/breed/${Object.keys(this.dogTypes)[index]}/${this.selected}/images`
+          }
+        const response = await fetch(this.dogUrl, {method:'get'})
+          .then(response=>{
+            if(response.ok){
+              this.dialog=true
+              return response.json()
+            }
+            throw new Error('error')
+          .catch(e =>console.log(e.message))
+          })
+         this.render(response)
+         this.selected = ''
+         this.dogUrl = ''
+        },
+       render(response){
+         if(response.message.length>10){
+           this.dogImages =_(response.message).shuffle().slice(0,10).value()
+         }else{
+           this.dogImages = _.shuffle(response.message)
+         }
+        },
+        onScroll(e) {
+          if (typeof window === 'undefined') return
+          const top = window.pageYOffset || e.target.scrollTop || 0
+          this.fab = top > 20
+        },
+        toTop() {
+          this.$vuetify.goTo(0)
+        }
+      },
+       created(){
+          this.loading = true;
+          fetch('https://dog.ceo/api/breeds/list/all')
+           .then(response => response.json())
+           .then(data => {
+             this.dogTypes= data.message
+             this.loading = false
+            // console.log(Object.keys(this.dogTypes))
+           }).catch(err=>console.log(err))
+        }
+     })
+  </script>
+  </body>
+</html>

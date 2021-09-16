@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <meta name="description" content="犬のフォトギャラリーです。DogAPIから様々な犬種の写真を取得して表示しています" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
   <style>
    [v-cloak]{
@@ -18,7 +19,7 @@
      font-weight: bold;
    }
  </style>
-  <title>DOG API</title>
+  <title>DOG API | 犬のフォトギャラリー</title>
 </head>
 <body ontouchstart="">
   <div id="app" v-cloak>
@@ -34,7 +35,7 @@
           <v-icon>mdi-chevron-up</v-icon>
         </v-btn>
       <v-main>
-        <div v-if="loading">loading.....</div>
+        <div v-if="loading" class="text-center text-h3 grey--text">loading.....</div>
         <div v-if="!loading">
         <v-container fluid class="my-5">
           <v-row justify="center" v-show="dialog" class="scroll-y">
@@ -73,7 +74,7 @@
              <v-col cols="12" sm="10" md="8" lg="6">
               <v-alert outlined color="#F06292">
                 <div>写真をクリックすると１犬種あたり１０枚のランダムにチョイスされた写真がでます。<br>
-                  ほとんどの犬種は１００枚以上の写真がありますが、中には２〜３枚(最小は1枚)の犬種がいます</div>
+                  ほとんどの犬種は１００枚以上の写真がありますが、中には２〜３枚(最小は1枚)の犬種もいます</div>
               </v-alert>
              </v-col>
             </v-row>
@@ -156,11 +157,13 @@
             throw new Error('error')
           .catch(e =>console.log(e.message))
           })
+
          this.render(response)
          this.selected = ''
          this.dogUrl = ''
         },
-       render(response){
+
+        render(response){
          if(response.message.length>10){
            this.dogImages =_(response.message).shuffle().slice(0,10).value()
          }else{
@@ -183,7 +186,8 @@
            .then(data => {
              this.dogTypes= data.message
              this.loading = false
-            // console.log(Object.keys(this.dogTypes))
+            //console.log(Object.keys(this.dogTypes))
+             //https://dog.ceo/api/breed/dachshund/images
            }).catch(err=>console.log(err))
         }
      })
